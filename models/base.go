@@ -8,7 +8,7 @@ import (
 )
 
 // BaseModel defines a standard set of fields with a UUID primary key.
-// Use this as the base for models in single-tenant mode or shared infrastructure tables.
+// Use this as the base for models in single-company mode or shared infrastructure tables.
 type BaseModel struct {
 	ID        uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -24,9 +24,9 @@ func (b *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-// TenantBaseModel extends BaseModel with tenant_id for multi-tenant applications.
-// All domain models that belong to a specific tenant should embed this instead of BaseModel.
-type TenantBaseModel struct {
+// CompanyBaseModel extends BaseModel with company_id for multi-company applications.
+// All domain models that belong to a specific company should embed this instead of BaseModel.
+type CompanyBaseModel struct {
 	BaseModel
-	TenantID string `json:"tenant_id" gorm:"index;not null"`
+	CompanyID string `json:"company_id" gorm:"type:uuid;index;not null"`
 }

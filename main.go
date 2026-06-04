@@ -11,15 +11,34 @@ import (
 	"backend/db"
 	"backend/global"
 	"backend/middleware"
+	miniouploader "backend/pkg/minio"
+
 	"backend/modules/auth"
-	"backend/modules/controlhub"
+	"backend/modules/backups"
+	"backend/modules/dashboard"
+	"backend/modules/departments"
+	"backend/modules/finance"
+	"backend/modules/incidents"
+	"backend/modules/inventory"
+	"backend/modules/merchantportal"
+	"backend/modules/merchants"
+	"backend/modules/products"
+	"backend/modules/profile"
 	"backend/modules/rbac"
+	"backend/modules/recyclebin"
+	"backend/modules/riskcompliance"
+	"backend/modules/settings"
+	"backend/modules/sims"
+	"backend/modules/stafflisting"
+	"backend/modules/systemupdates"
+	"backend/modules/taxonomy"
 	"backend/modules/users"
 	config "backend/pkg"
 	"backend/routes"
 
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
+	"strings"
 )
 
 func main() {
@@ -41,7 +60,7 @@ func main() {
 	}
 
 	sugar.Infof("Starting application in %s environment", cfg.Env)
-	sugar.Infof("Multi-tenancy: %v", cfg.MultiTenantEnabled)
+	sugar.Infof("Multi-tenancy: %v", cfg.MultiCompanyEnabled)
 
 	// Initialize database connection.
 	if err := db.Initialize(cfg, sugar); err != nil {
@@ -49,22 +68,31 @@ func main() {
 	}
 	defer db.Close()
 
-	// Run AutoMigrate (alternatively, implement file-based SQL migrations in db/migrations/)
+	// Run AutoMigrate to create/update all tables from models
 	if err := db.AutoMigrate(db.GetDB(), sugar); err != nil {
 		sugar.Fatalf("AutoMigrate failed: %v", err)
 	}
 
-	// Seed default roles for the default tenant (if multi-tenancy enabled)
-	if cfg.MultiTenantEnabled && cfg.DefaultTenantID != "" {
-		if err := db.SeedDefaultRoles(db.GetDB(), cfg.DefaultTenantID, sugar); err != nil {
-			sugar.Warnf("Failed to seed default roles: %v", err)
-		}
+	// Seed initial data: default company, company admin, and platform company admin
+	if err := db.SeedInitialData(db.GetDB(), cfg, sugar); err != nil {
+		sugar.Warnf("Failed to seed initial data: %v", err)
 	}
 
 	// Initialize infrastructure services
-	// In this template: Email and Upload are optional. Provide nil or implement interfaces as needed.
 	var emailService global.EmailSender
 	var uploadService global.FileUploader
+
+	if cfg.FileStorageType == "minio" && cfg.MinioURL != "" {
+		useSSL := strings.HasPrefix(cfg.MinioURL, "https://")
+		endpoint := strings.TrimPrefix(strings.TrimPrefix(cfg.MinioURL, "https://"), "http://")
+		uploader, err := miniouploader.New(endpoint, cfg.MinioAccessKey, cfg.MinioSecretKey, cfg.MinioPublicURL, useSSL)
+		if err != nil {
+			sugar.Warnf("MinIO initialization failed: %v — file upload disabled", err)
+		} else {
+			uploadService = uploader
+			sugar.Info("MinIO upload service initialized")
+		}
+	}
 
 	// Initialize the shared App infrastructure (passed to all modules)
 	app := global.New(cfg, sugar, emailService, uploadService)
@@ -80,8 +108,56 @@ func main() {
 	rbacService := rbac.NewService(app)
 	rbacHandler := rbac.NewHandler(rbacService)
 
-	controlhubService := controlhub.NewService(app)
-	controlhubHandler := controlhub.NewHandler(controlhubService)
+	financeService := finance.NewService(app)
+	financeHandler := finance.NewHandler(financeService)
+
+	inventoryService := inventory.NewService(app)
+	inventoryHandler := inventory.NewHandler(inventoryService)
+
+	productsService := products.NewService(app)
+	productsHandler := products.NewHandler(productsService)
+
+	incidentsService := incidents.NewService(app)
+	incidentsHandler := incidents.NewHandler(incidentsService)
+
+	simsService := sims.NewService(app)
+	simsHandler := sims.NewHandler(simsService)
+
+	departmentsService := departments.NewService(app)
+	departmentsHandler := departments.NewHandler(departmentsService)
+
+	staffService := stafflisting.NewService(app)
+	staffHandler := stafflisting.NewHandler(staffService)
+
+	systemUpdatesService := systemupdates.NewService(app)
+	systemUpdatesHandler := systemupdates.NewHandler(systemUpdatesService)
+
+	backupsService := backups.NewService(app)
+	backupsHandler := backups.NewHandler(backupsService)
+
+	merchantsService := merchants.NewService(app)
+	merchantsHandler := merchants.NewHandler(merchantsService)
+
+	taxonomyService := taxonomy.NewService(app)
+	taxonomyHandler := taxonomy.NewHandler(taxonomyService)
+
+	settingsService := settings.NewService(app)
+	settingsHandler := settings.NewHandler(settingsService)
+
+	profileService := profile.NewService(app)
+	profileHandler := profile.NewHandler(profileService)
+
+	riskComplianceService := riskcompliance.NewService(app)
+	riskComplianceHandler := riskcompliance.NewHandler(riskComplianceService)
+
+	recycleBinService := recyclebin.NewService(app)
+	recycleBinHandler := recyclebin.NewHandler(recycleBinService)
+
+	dashboardService := dashboard.NewService(app)
+	dashboardHandler := dashboard.NewHandler(dashboardService)
+
+	merchantPortalService := merchantportal.NewService(app)
+	merchantPortalHandler := merchantportal.NewHandler(merchantPortalService)
 
 	// Create Echo router
 	e := echo.New()
@@ -98,23 +174,31 @@ func main() {
 		return c.JSON(200, map[string]string{"status": "ok"})
 	})
 
-	// Public routes (auth group, no TenantMiddleware)
+	// Public routes (auth group, no CompanyMiddleware)
+	// Auth handlers call c.Get("db"), so inject the global unscoped DB here
+	// since CompanyMiddleware (which normally sets "db") is not applied to this group.
 	publicAPI := e.Group("/api/v1/auth")
+	publicAPI.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("db", db.GetDB())
+			return next(c)
+		}
+	})
 	routes.SetupAuthRoutes(publicAPI, authHandler)
 
-	// ControlHub routes (platform-level, separate from tenant auth)
-	routes.SetupControlHubRoutes(e, controlhubHandler, cfg)
+	// Merchant portal routes (merchant-facing, separate auth)
+	routes.SetupMerchantPortalRoutes(e, merchantPortalHandler, cfg, db.GetDB())
 
-	// Protected routes (with JWT + Tenant middleware)
+	// Protected routes (with JWT + Company middleware)
 	api := e.Group("/api/v1", middleware.JWTMiddleware(cfg))
 
-	// Attach tenant middleware
-	tenantCfg := middleware.TenantConfig{
-		DB:                 db.GetDB(),
-		Logger:             sugar,
-		MultiTenantEnabled: cfg.MultiTenantEnabled,
+	// Attach company middleware
+	companyCfg := middleware.CompanyConfig{
+		DB:                  db.GetDB(),
+		Logger:              sugar,
+		MultiCompanyEnabled: cfg.MultiCompanyEnabled,
 	}
-	api.Use(middleware.TenantMiddleware(tenantCfg))
+	api.Use(middleware.CompanyMiddleware(companyCfg))
 
 	// Attach audit middleware for state-changing requests
 	api.Use(middleware.AuditMiddleware(db.GetDB(), sugar))
@@ -122,6 +206,22 @@ func main() {
 	// Register protected routes
 	routes.SetupUserRoutes(api, usersHandler)
 	routes.SetupRBACRoutes(api, rbacHandler)
+	routes.SetupFinanceRoutes(api, financeHandler)
+	routes.SetupInventoryRoutes(api, inventoryHandler)
+	routes.SetupProductRoutes(api, productsHandler)
+	routes.SetupSimRoutes(api, simsHandler)
+	routes.SetupIncidentsRoutes(api, incidentsHandler)
+	routes.SetupDepartmentRoutes(api, departmentsHandler)
+	routes.SetupStaffRoutes(api, staffHandler)
+	routes.SetupSystemUpdateRoutes(api, systemUpdatesHandler)
+	routes.SetupBackupRoutes(api, backupsHandler)
+	routes.SetupMerchantRoutes(api, merchantsHandler)
+	routes.SetupTaxonomyRoutes(api, taxonomyHandler)
+	routes.SetupSettingsRoutes(api, settingsHandler)
+	routes.SetupProfileRoutes(api, profileHandler)
+	routes.SetupRiskComplianceRoutes(api, riskComplianceHandler)
+	routes.SetupRecycleBinRoutes(api, recycleBinHandler)
+	routes.SetupDashboardRoutes(api, dashboardHandler)
 
 	// Start server with graceful shutdown
 	go func() {

@@ -47,7 +47,7 @@ The server starts on `http://localhost:8080` with default endpoints:
 ```
 main.go
   ↓
-Middleware (JWT, Tenant, RBAC, Audit)
+Middleware (JWT, Company, RBAC, Audit)
   ↓
 Handler (HTTP layer)
   ↓
@@ -55,7 +55,7 @@ Service (Business logic, receives *gorm.DB)
   ↓
 Models (Domain entities)
   ↓
-Database (Tenant-scoped via middleware)
+Database (Company-scoped via middleware)
 ```
 
 ### Key Components
@@ -74,22 +74,22 @@ Database (Tenant-scoped via middleware)
 
 ### How It Works
 
-1. **JWT contains `tenant_id`** — Set during login
-2. **TenantMiddleware scopes queries** — `WHERE tenant_id = ?` at request middleware level
-3. **No per-query effort** — Service methods receive tenant-scoped DB automatically
+1. **JWT contains `company_id`** — Set during login
+2. **CompanyMiddleware scopes queries** — `WHERE company_id = ?` at request middleware level
+3. **No per-query effort** — Service methods receive company-scoped DB automatically
 4. **Row-Level Security** — PostgreSQL RLS policies provide defense-in-depth
 
-### Single-Tenant Mode
+### Single-Company Mode
 
 For non-SaaS projects, disable multi-tenancy:
 
 ```bash
 # .env
-MULTI_TENANT_ENABLED=false
-DEFAULT_TENANT_ID=default
+MULTI_COMPANY_ENABLED=false
+DEFAULT_COMPANY_ID=default
 ```
 
-TenantMiddleware becomes a no-op; all queries work on the full database.
+CompanyMiddleware becomes a no-op; all queries work on the full database.
 
 ---
 
@@ -97,19 +97,19 @@ TenantMiddleware becomes a no-op; all queries work on the full database.
 
 This template uses **two separate authentication contexts**:
 
-| Aspect | Tenant Auth | ControlHub Auth |
+| Aspect | Company Auth | ControlHub Auth |
 |---|---|---|
-| **Purpose** | User login within a tenant | Platform admin login |
+| **Purpose** | User login within a company | Platform admin login |
 | **Endpoint** | `POST /api/v1/auth/login` | `POST /controlhub/auth/login` |
-| **JWT Claims** | `{sub, email, role_slug, tenant_id}` | `{sub, email, role, level, user_type}` |
-| **DB Scope** | Tenant-scoped (WHERE tenant_id) | Platform-scoped (all rows) |
+| **JWT Claims** | `{sub, email, role_slug, company_id}` | `{sub, email, role, level, user_type}` |
+| **DB Scope** | Company-scoped (WHERE company_id) | Platform-scoped (all rows) |
 | **Table** | `users` | `company_admins` |
 | **RBAC** | Checked via role_slug + permissions table | Checked via role/level claims |
 | **Use Case** | Application users | Infrastructure admins |
 
 **Why Two Systems?**
 - **Separation of Concerns** — Platform management (infrastructure) is separate from application data (users/data)
-- **Security** — Breached tenant credentials can't access platform
+- **Security** — Breached company credentials can't access platform
 - **Scalability** — Each context has its own token lifecycle and permissions model
 
 ---
@@ -138,7 +138,7 @@ Replace `MODULENAME` with `projects` in all files.
 // modules/projects/service.go
 func (s *service) Create(db *gorm.DB, req CreateRequest) (*ResponseDTO, error) {
     project := &models.Project{
-        TenantID: tenantID,  // Automatically scoped by middleware
+        CompanyID: companyID,  // Automatically scoped by middleware
         Name: req.Name,
         // ... other fields
     }
@@ -173,8 +173,8 @@ APP_PORT=8080
 APP_ENV=development
 
 # Multi-Tenancy
-MULTI_TENANT_ENABLED=true
-DEFAULT_TENANT_ID=your-tenant-id
+MULTI_COMPANY_ENABLED=true
+DEFAULT_COMPANY_ID=your-company-id
 
 # Database (two-role strategy for safety)
 DB_HOST=localhost
@@ -238,17 +238,17 @@ The template uses two PostgreSQL roles for safety:
 ### Core Tables
 
 ```sql
--- Tenants (multi-tenant SaaS organization)
-tenants (id, name, slug, is_active, ...)
+-- Companys (multi-company SaaS organization)
+companys (id, name, slug, is_active, ...)
 
--- Users (scoped to tenant)
-users (id, tenant_id, email, password_hash, role_slug, ...)
+-- Users (scoped to company)
+users (id, company_id, email, password_hash, role_slug, ...)
 
--- Roles (scoped to tenant)
-roles (id, tenant_id, name, slug, is_system, ...)
+-- Roles (scoped to company)
+roles (id, company_id, name, slug, is_system, ...)
 
--- Permissions (scoped to tenant)
-permissions (id, tenant_id, code, category, ...)
+-- Permissions (scoped to company)
+permissions (id, company_id, code, category, ...)
 
 -- role_permissions (join table)
 role_permissions (role_id, permission_id)
@@ -256,8 +256,8 @@ role_permissions (role_id, permission_id)
 -- User Permission Overrides (fine-grained per-user control)
 user_permission_overrides (id, user_id, permission_id, granted, ...)
 
--- Audit logs (scoped to tenant)
-audit_logs (id, tenant_id, user_id, action, resource, ...)
+-- Audit logs (scoped to company)
+audit_logs (id, company_id, user_id, action, resource, ...)
 ```
 
 ### Adding New Tables
@@ -268,25 +268,25 @@ audit_logs (id, tenant_id, user_id, action, resource, ...)
 -- db/migrations/004_projects.sql
 CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id VARCHAR(255) NOT NULL REFERENCES tenants(id),
+    company_id VARCHAR(255) NOT NULL REFERENCES companys(id),
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     -- ... other fields
 );
 
-CREATE INDEX idx_projects_tenant_id ON projects(tenant_id);
+CREATE INDEX idx_projects_company_id ON projects(company_id);
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY projects_tenant_isolation ON projects
-    USING (tenant_id = current_setting('app.tenant_id')::text)
-    WITH CHECK (tenant_id = current_setting('app.tenant_id')::text);
+CREATE POLICY projects_company_isolation ON projects
+    USING (company_id = current_setting('app.company_id')::text)
+    WITH CHECK (company_id = current_setting('app.company_id')::text);
 ```
 
 2. Create model in `models/projects.go`
 
 ```go
 type Project struct {
-    TenantBaseModel
+    CompanyBaseModel
     Name  string
     // ... other fields
 }
@@ -316,7 +316,7 @@ admin.manage    — Admin panel access
 - `super_admin` — Bypass all permission checks
 - `admin` — Full access to admin permissions
 - `user` — Limited to basic permissions
-- Custom roles — Define per tenant
+- Custom roles — Define per company
 
 ### Fine-Grained Overrides
 
@@ -361,7 +361,7 @@ Middleware runs in this order:
 1. **LoggerMiddleware** — Structured request logging via Zap
 2. **CORSMiddleware** — CORS headers (config-driven)
 3. **JWTMiddleware** — Token validation, claims extraction
-4. **TenantMiddleware** — Tenant resolution, DB scoping
+4. **CompanyMiddleware** — Company resolution, DB scoping
 5. **AuditMiddleware** — State-change logging (POST, PUT, DELETE)
 6. **RBACMiddleware** — Per-route permission checks (optional)
 
@@ -397,7 +397,7 @@ response.ErrorWithData("Validation failed", errors)
 
 ---
 
-## Authentication Flow (Tenant-Level)
+## Authentication Flow (Company-Level)
 
 ### 1. Login
 
@@ -451,7 +451,7 @@ Content-Type: application/json
 
 ## ControlHub Authentication (Platform-Level)
 
-ControlHub provides **company admin** authentication separate from tenant-level user auth. This is the platform administration layer.
+ControlHub provides **company admin** authentication separate from company-level user auth. This is the platform administration layer.
 
 ### 1. ControlHub Login (Company Admin)
 
@@ -481,19 +481,19 @@ Response:
 }
 ```
 
-**Key Differences from Tenant Auth:**
-- **No tenant_id in JWT** — Platform-scoped, not tenant-specific
-- **Role: "controlhub"** — Indicates platform admin, not tenant user
+**Key Differences from Company Auth:**
+- **No company_id in JWT** — Platform-scoped, not company-specific
+- **Role: "controlhub"** — Indicates platform admin, not company user
 - **Access Level: "company_admin"** — Specifies admin privileges
 - **Separate endpoints** — `/controlhub/*` vs `/api/v1/*`
 
 ### 2. Use ControlHub Token
 
 ```bash
-GET /api/v1/controlhub/tenants
+GET /api/v1/controlhub/companys
 Authorization: Bearer <controlhub_access_token>
 
-# Returns all tenants (company admin view)
+# Returns all companys (company admin view)
 ```
 
 Protected ControlHub routes require both:
@@ -507,8 +507,8 @@ Protected ControlHub routes require both:
 | `/controlhub/auth/login` | POST | Login as company admin |
 | `/controlhub/auth/refresh` | POST | Refresh access token |
 | `/controlhub/auth/logout` | POST | Logout (clear refresh token) |
-| `/api/v1/controlhub/tenants` | GET | List all tenants |
-| `/api/v1/controlhub/tenants` | POST | Create new tenant |
+| `/api/v1/controlhub/companys` | GET | List all companys |
+| `/api/v1/controlhub/companys` | POST | Create new company |
 
 ---
 
@@ -607,7 +607,7 @@ logger.Debugf("Query: %s", query)
 ```
 
 Logs include:
-- Structured fields (tenant_id, user_id, etc.)
+- Structured fields (company_id, user_id, etc.)
 - Stack traces for errors
 - Request/response timings
 - All state-changing operations (via AuditMiddleware)
@@ -671,7 +671,7 @@ go test -tags=integration ./tests/...
 ```go
 permission := models.Permission{
     Code:     "documents.archive",
-    TenantID: tenantID,
+    CompanyID: companyID,
     Category: "documents",
     Description: "Archive documents",
 }
@@ -688,7 +688,7 @@ db.Model(&role).Association("Permissions").Append(&permission)
 
 ```go
 role := models.Role{
-    TenantID:    tenantID,
+    CompanyID:    companyID,
     Name:        "Reviewer",
     Slug:        "reviewer",
     Description: "Can review documents",
@@ -710,9 +710,9 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ## Troubleshooting
 
-### "Tenant not found"
-- Check X-Tenant-ID header or JWT tenant_id claim
-- Verify tenant exists in database: `SELECT * FROM tenants WHERE id = '...';`
+### "Company not found"
+- Check X-Company-ID header or JWT company_id claim
+- Verify company exists in database: `SELECT * FROM companys WHERE id = '...';`
 
 ### "Insufficient permissions"
 - Verify user's role has required permission
@@ -749,14 +749,14 @@ curl -H "Authorization: Bearer $TOKEN" \
 │       └── 003_example_projects_feature.sql
 │
 ├── models/                 # Domain entities
-│   ├── base.go             # BaseModel, TenantBaseModel
+│   ├── base.go             # BaseModel, CompanyBaseModel
 │   ├── user.go             # User, Role, Permission, Override
 │   ├── audit.go            # AuditLog
-│   └── meta.go             # Tenant
+│   └── meta.go             # Company
 │
 ├── middleware/             # Request processing pipeline
 │   ├── auth.go             # JWT validation
-│   ├── tenant.go           # Tenant resolution & DB scoping
+│   ├── company.go           # Company resolution & DB scoping
 │   ├── rbac.go             # Permission checking
 │   ├── audit.go            # State-change logging
 │   └── cors.go             # CORS headers

@@ -30,9 +30,9 @@ func RBACMiddleware(db *gorm.DB, logger *zap.SugaredLogger, requiredCodes ...str
 			}
 
 			// Load user with role and permissions
-			tenantDB := c.Get("db").(*gorm.DB)
+			companyDB := c.Get("db").(*gorm.DB)
 			var user models.User
-			if err := tenantDB.
+			if err := companyDB.
 				Preload("PermissionOverrides.Permission").
 				First(&user, "id = ?", userID).Error; err != nil {
 				logger.Warnf("Failed to load user: %v", err)
@@ -41,7 +41,7 @@ func RBACMiddleware(db *gorm.DB, logger *zap.SugaredLogger, requiredCodes ...str
 
 			// Load role with permissions
 			var role models.Role
-			if err := tenantDB.
+			if err := companyDB.
 				Preload("Permissions").
 				First(&role, "slug = ?", roleSlug).Error; err != nil {
 				logger.Warnf("Failed to load role: %v", err)

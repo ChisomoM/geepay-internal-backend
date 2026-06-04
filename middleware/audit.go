@@ -24,9 +24,9 @@ func AuditMiddleware(db *gorm.DB, logger *zap.SugaredLogger) echo.MiddlewareFunc
 			}
 
 			userID, _ := c.Get("user_id").(string)
-			tenantID, _ := c.Get("tenant_id").(string)
+			companyID, _ := c.Get("company_id").(string)
 
-			if userID == "" || tenantID == "" {
+			if userID == "" || companyID == "" {
 				return next(c)
 			}
 
@@ -37,8 +37,8 @@ func AuditMiddleware(db *gorm.DB, logger *zap.SugaredLogger) echo.MiddlewareFunc
 
 			// Log the audit entry
 			auditLog := models.AuditLog{
-				TenantBaseModel: models.TenantBaseModel{
-					TenantID: tenantID,
+				CompanyBaseModel: models.CompanyBaseModel{
+					CompanyID: companyID,
 				},
 				UserID:     uuid.MustParse(userID),
 				Action:     action,

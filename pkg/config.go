@@ -19,8 +19,8 @@ type Config struct {
 	Env  string
 
 	// Multi-tenancy
-	MultiTenantEnabled bool
-	DefaultTenantID    string
+	MultiCompanyEnabled bool
+	DefaultCompanyID    string
 
 	// Database
 	DBHost     string
@@ -38,6 +38,10 @@ type Config struct {
 
 	// JWT
 	JWTSecret string
+
+	// Seed credentials (used on first startup to create the super admin)
+	SuperAdminEmail    string
+	SuperAdminPassword string
 
 	// Email (optional, provide interface implementation or leave empty)
 	SMTPHost      string
@@ -64,30 +68,32 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Port:               getEnv("APP_PORT", "8080"),
-		Env:                getEnv("APP_ENV", "development"),
-		MultiTenantEnabled: getEnvBool("MULTI_TENANT_ENABLED", true),
-		DefaultTenantID:    getEnv("DEFAULT_TENANT_ID", ""),
-		DBHost:             getEnv("DB_HOST", "localhost"),
-		DBPort:             getEnv("DB_PORT", "5432"),
-		DBUsername:         getEnv("DB_USERNAME", "postgres"),
-		DBPassword:         getEnv("DB_PASSWORD", ""),
-		DBName:             getEnv("DB_NAME", "template_db"),
-		DBPoolMaxOpen:      getEnvInt("DB_POOL_MAX_OPEN", 25),
-		DBPoolMaxIdle:      getEnvInt("DB_POOL_MAX_IDLE", 5),
-		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
-		JWTSecret:          getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
-		SMTPHost:           getEnv("SMTP_HOST", ""),
-		SMTPPort:           getEnv("SMTP_PORT", ""),
-		SMTPUsername:       getEnv("SMTP_USERNAME", ""),
-		SMTPPassword:       getEnv("SMTP_PASSWORD", ""),
-		SMTPFromEmail:      getEnv("SMTP_FROM_EMAIL", ""),
-		FileStorageType:    getEnv("FILE_STORAGE_TYPE", "local"),
-		MinioURL:           getEnv("MINIO_URL", ""),
-		MinioBucket:        getEnv("MINIO_BUCKET", ""),
-		MinioAccessKey:     getEnv("MINIO_ACCESS_KEY", ""),
-		MinioSecretKey:     getEnv("MINIO_SECRET_KEY", ""),
-		MinioPublicURL:     getEnv("MINIO_PUBLIC_URL", ""),
+		Port:                getEnv("APP_PORT", "8080"),
+		Env:                 getEnv("APP_ENV", "development"),
+		MultiCompanyEnabled: getEnvBool("MULTI_COMPANY_ENABLED", true),
+		DefaultCompanyID:    getEnv("DEFAULT_COMPANY_ID", ""),
+		DBHost:              getEnv("DB_HOST", "localhost"),
+		DBPort:              getEnv("DB_PORT", "5432"),
+		DBUsername:          getEnv("DB_USERNAME", "postgres"),
+		DBPassword:          getEnv("DB_PASSWORD", ""),
+		DBName:              getEnv("DB_NAME", "template_db"),
+		DBPoolMaxOpen:       getEnvInt("DB_POOL_MAX_OPEN", 25),
+		DBPoolMaxIdle:       getEnvInt("DB_POOL_MAX_IDLE", 5),
+		CORSAllowedOrigins:  getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"),
+		JWTSecret:           getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
+		SuperAdminEmail:     getEnv("SUPER_ADMIN_EMAIL", "admin@geepay.com"),
+		SuperAdminPassword:  getEnv("SUPER_ADMIN_PASSWORD", "admin123"),
+		SMTPHost:            getEnv("SMTP_HOST", ""),
+		SMTPPort:            getEnv("SMTP_PORT", ""),
+		SMTPUsername:        getEnv("SMTP_USERNAME", ""),
+		SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
+		SMTPFromEmail:       getEnv("SMTP_FROM_EMAIL", ""),
+		FileStorageType:     getEnv("FILE_STORAGE_TYPE", "local"),
+		MinioURL:            getEnv("MINIO_URL", ""),
+		MinioBucket:         getEnv("MINIO_BUCKET", ""),
+		MinioAccessKey:      getEnv("MINIO_ACCESS_KEY", ""),
+		MinioSecretKey:      getEnv("MINIO_SECRET_KEY", ""),
+		MinioPublicURL:      getEnv("MINIO_PUBLIC_URL", ""),
 	}
 
 	return cfg, nil

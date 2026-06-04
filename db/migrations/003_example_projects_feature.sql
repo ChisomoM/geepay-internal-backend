@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id VARCHAR(255) NOT NULL REFERENCES tenants(id),
+    company_id UUID NOT NULL REFERENCES companys(id),
     name VARCHAR(255) NOT NULL,
     description TEXT,
     owner_id UUID NOT NULL REFERENCES users(id),
@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS projects (
     deleted_at TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_projects_tenant_id ON projects(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_projects_company_id ON projects(company_id);
 CREATE INDEX IF NOT EXISTS idx_projects_owner_id ON projects(owner_id);

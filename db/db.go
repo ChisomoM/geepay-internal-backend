@@ -13,7 +13,7 @@ import (
 
 // Manager is a singleton that holds the database connection pool.
 // The same connection pool is shared across all requests and middleware.
-// Multi-tenancy is enforced at the query level via TenantMiddleware.
+// Multi-tenancy is enforced at the query level via CompanyMiddleware.
 type Manager struct {
 	db *gorm.DB
 	mu sync.RWMutex
@@ -58,8 +58,8 @@ func newManager(cfg *config.Config, logger *zap.SugaredLogger) (*Manager, error)
 }
 
 // GetDB returns the singleton database connection pool.
-// In multi-tenant mode, this is scoped by TenantMiddleware (WHERE tenant_id = ?).
-// In single-tenant mode, this is used directly by handlers.
+// In multi-company mode, this is scoped by CompanyMiddleware (WHERE company_id = ?).
+// In single-company mode, this is used directly by handlers.
 func GetDB() *gorm.DB {
 	if instance == nil {
 		panic("database not initialized; call db.Initialize() first")

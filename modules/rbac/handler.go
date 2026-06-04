@@ -28,7 +28,8 @@ func NewHandler(service Service) Handler {
 // ListPermissions handles GET /api/v1/rbac/permissions
 func (h *handler) ListPermissions(c echo.Context) error {
 	db := c.Get("db").(*gorm.DB)
-	perms, err := h.service.ListPermissions(db)
+	companyID, _ := c.Get("companyID").(string)
+	perms, err := h.service.ListPermissions(db, companyID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, response.Error("Failed to fetch permissions"))
 	}
@@ -38,7 +39,8 @@ func (h *handler) ListPermissions(c echo.Context) error {
 // ListRoles handles GET /api/v1/rbac/roles
 func (h *handler) ListRoles(c echo.Context) error {
 	db := c.Get("db").(*gorm.DB)
-	roles, err := h.service.ListRoles(db)
+	companyID, _ := c.Get("companyID").(string)
+	roles, err := h.service.ListRoles(db, companyID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, response.Error("Failed to fetch roles"))
 	}
@@ -47,9 +49,17 @@ func (h *handler) ListRoles(c echo.Context) error {
 
 // CreateRole handles POST /api/v1/rbac/roles
 func (h *handler) CreateRole(c echo.Context) error {
+	var req CreateRoleRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, response.Error("invalid request"))
+	}
+
 	db := c.Get("db").(*gorm.DB)
-	if err := h.service.CreateRole(db); err != nil {
+	companyID, _ := c.Get("companyID").(string)
+
+	role, err := h.service.CreateRole(db, companyID, req)
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, response.Error("Failed to create role"))
 	}
-	return c.JSON(http.StatusCreated, response.SuccessWithMessage("Role created", nil))
+	return c.JSON(http.StatusCreated, response.SuccessWithMessage("Role created", role))
 }

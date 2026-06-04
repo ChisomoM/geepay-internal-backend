@@ -1,0 +1,1971 @@
+{
+  "info": {
+    "name": "Geepay Internal Backend",
+    "_postman_id": "geepay-internal-api-v1",
+    "description": "Complete REST API collection. Run 'Login' first — it auto-saves the token to {{token}} for all protected requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.status === 0 && r.data && r.data.access_token) {",
+                  "    pm.collectionVariables.set('token', r.data.access_token);",
+                  "    console.log('Token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@geepay.com\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@geepay.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset-token-here\",\n  \"new_password\": \"newpassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff@company.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"role_slug\": \"user\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Updated\",\n  \"role_slug\": \"admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC",
+      "item": [
+        {
+          "name": "List Permissions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manager\",\n  \"slug\": \"manager\",\n  \"description\": \"Team manager with limited admin access\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/roles",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"System Administrator\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"123 Main St, Lagos\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": {\n    \"site_name\": \"Geepay Internal\",\n    \"contact_email\": \"admin@geepay.com\",\n    \"timezone\": \"Africa/Lagos\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/settings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "settings"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List Departments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/departments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Software development team\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/departments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get Department",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/departments/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering & DevOps\",\n  \"description\": \"Updated description\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/departments/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/departments/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "departments", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "List Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Create Staff",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Adeola\",\n  \"last_name\": \"Okonkwo\",\n  \"designation\": \"Software Engineer\",\n  \"salary\": 350000,\n  \"department_id\": \"\",\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff"]
+            }
+          }
+        },
+        {
+          "name": "Export Staff CSV",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/export-csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff", "export-csv"]
+            }
+          }
+        },
+        {
+          "name": "Get Staff",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Staff",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"designation\": \"Senior Engineer\",\n  \"salary\": 400000,\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Staff",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/staff/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "staff", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Merchants",
+      "item": [
+        {
+          "name": "List Merchants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants"]
+            }
+          }
+        },
+        {
+          "name": "Create Merchant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TechPay Ltd\",\n  \"integration_status\": \"active\",\n  \"onboarded_on\": \"2026-01-15T00:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants"]
+            }
+          }
+        },
+        {
+          "name": "Export Merchants CSV",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/export-csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", "export-csv"]
+            }
+          }
+        },
+        {
+          "name": "Export Statements CSV",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/statements/export-csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", "statements", "export-csv"]
+            }
+          }
+        },
+        {
+          "name": "Get Merchant",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Merchant",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"TechPay Ltd Updated\",\n  \"integration_status\": \"pending\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Merchant",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "List Statements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:merchantId/statements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":merchantId", "statements"],
+              "variable": [{ "key": "merchantId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Create Statement",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"drive_link\": \"https://drive.google.com/file/d/example\",\n  \"document_name\": \"January 2026 Statement\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:merchantId/statements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":merchantId", "statements"],
+              "variable": [{ "key": "merchantId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Get Statement",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:merchantId/statements/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":merchantId", "statements", ":id"],
+              "variable": [
+                { "key": "merchantId", "value": "" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Statement",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"document_name\": \"January 2026 Statement (Revised)\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:merchantId/statements/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":merchantId", "statements", ":id"],
+              "variable": [
+                { "key": "merchantId", "value": "" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Statement",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/merchants/:merchantId/statements/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "merchants", ":merchantId", "statements", ":id"],
+              "variable": [
+                { "key": "merchantId", "value": "" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finance",
+      "item": [
+        {
+          "name": "Budgets",
+          "item": [
+            {
+              "name": "List Budgets",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/budget", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "budget"] }
+              }
+            },
+            {
+              "name": "Create Budget",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Office Supplies Q1\",\n  \"actual_amount\": 50000,\n  \"purchase_frequency\": \"quarterly\",\n  \"renewal_date\": \"2026-03-31T00:00:00Z\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{base_url}}/api/v1/finance/budget", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "budget"] }
+              }
+            },
+            {
+              "name": "Export Budgets CSV",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/budget/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "budget", "export-csv"] }
+              }
+            },
+            {
+              "name": "Get Budget",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/budget/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "budget", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Update Budget",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"actual_amount\": 60000\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/budget/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "budget", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Renew Budget",
+              "request": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/budget/:id/renew",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "budget", ":id", "renew"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Delete Budget",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/budget/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "budget", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Licenses",
+          "item": [
+            {
+              "name": "List Licenses",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/licenses", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "licenses"] }
+              }
+            },
+            {
+              "name": "Create License",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Microsoft Office 365\",\n  \"provider\": \"Microsoft\",\n  \"renewal_date\": \"2026-12-31T00:00:00Z\",\n  \"is_active\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{base_url}}/api/v1/finance/licenses", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "licenses"] }
+              }
+            },
+            {
+              "name": "Export Licenses CSV",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/licenses/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "licenses", "export-csv"] }
+              }
+            },
+            {
+              "name": "Get License",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/licenses/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "licenses", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Update License",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"is_active\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/licenses/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "licenses", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Renew License",
+              "request": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/licenses/:id/renew",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "licenses", ":id", "renew"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Delete License",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/licenses/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "licenses", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Statutories",
+          "item": [
+            {
+              "name": "List Statutories",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/statutories", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "statutories"] }
+              }
+            },
+            {
+              "name": "Create Statutory",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"VAT Filing Q1 2026\",\n  \"due_date\": \"2026-04-30T00:00:00Z\",\n  \"amount\": 250000\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{base_url}}/api/v1/finance/statutories", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "statutories"] }
+              }
+            },
+            {
+              "name": "Get Statutory",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/statutories/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "statutories", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Update Statutory",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 300000\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/statutories/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "statutories", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Mark Statutory Paid",
+              "request": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/statutories/:id/mark-paid",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "statutories", ":id", "mark-paid"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Delete Statutory",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/statutories/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "statutories", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salary Advances",
+          "item": [
+            {
+              "name": "List Salary Advances",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/salary-advance", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "salary-advance"] }
+              }
+            },
+            {
+              "name": "Create Salary Advance",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": \"\",\n  \"amount\": 100000,\n  \"deduction_months\": 3\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{base_url}}/api/v1/finance/salary-advance", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "salary-advance"] }
+              }
+            },
+            {
+              "name": "Export Salary Advances CSV",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/v1/finance/salary-advance/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "finance", "salary-advance", "export-csv"] }
+              }
+            },
+            {
+              "name": "Get Salary Advance",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/salary-advance/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "salary-advance", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Approve Salary Advance",
+              "request": {
+                "method": "PATCH",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/salary-advance/:id/status",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "salary-advance", ":id", "status"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Deduct Salary Advance",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"months\": 1\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/salary-advance/:id/deduct",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "salary-advance", ":id", "deduct"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            },
+            {
+              "name": "Delete Salary Advance",
+              "request": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/finance/salary-advance/:id",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "finance", "salary-advance", ":id"],
+                  "variable": [{ "key": "id", "value": "" }]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "List All Items",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/inventory", "host": ["{{base_url}}"], "path": ["api", "v1", "inventory"] }
+          }
+        },
+        {
+          "name": "List Items by Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/category/:categoryId/items",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "category", ":categoryId", "items"],
+              "variable": [{ "key": "categoryId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/item/:itemId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "item", ":itemId"],
+              "variable": [{ "key": "itemId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Dell Laptop XPS 15\",\n  \"serial_number\": \"DL-XPS-001\",\n  \"quantity\": 5,\n  \"status\": \"available\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/category/:categoryId/item",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "category", ":categoryId", "item"],
+              "variable": [{ "key": "categoryId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 4,\n  \"status\": \"low_stock\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/item/:itemId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "item", ":itemId"],
+              "variable": [{ "key": "itemId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Assign Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/item/:itemId/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "item", ":itemId", "assign"],
+              "variable": [{ "key": "itemId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Unassign Item",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/item/:itemId/unassign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "item", ":itemId", "unassign"],
+              "variable": [{ "key": "itemId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/item/:itemId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "item", ":itemId"],
+              "variable": [{ "key": "itemId", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/inventory/category", "host": ["{{base_url}}"], "path": ["api", "v1", "inventory", "category"] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Computers, phones, and peripherals\",\n  \"low_stock_threshold\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/inventory/category", "host": ["{{base_url}}"], "path": ["api", "v1", "inventory", "category"] }
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/category/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "category", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"low_stock_threshold\": 3\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/category/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "category", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/inventory/category/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "inventory", "category", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/products", "host": ["{{base_url}}"], "path": ["api", "v1", "products"] }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Payment Gateway Pro\",\n  \"description\": \"Full-featured payment gateway integration\",\n  \"price\": 99.99,\n  \"sku\": \"PG-PRO-001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/products", "host": ["{{base_url}}"], "path": ["api", "v1", "products"] }
+          }
+        },
+        {
+          "name": "Get Product",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 149.99\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "products", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SIM Cards",
+      "item": [
+        {
+          "name": "List SIMs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/sims", "host": ["{{base_url}}"], "path": ["api", "v1", "sims"] }
+          }
+        },
+        {
+          "name": "Create SIM",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+2348012345678\",\n  \"carrier\": \"MTN\",\n  \"status\": \"active\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/sims", "host": ["{{base_url}}"], "path": ["api", "v1", "sims"] }
+          }
+        },
+        {
+          "name": "Get SIM",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/sims/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sims", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update SIM",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"inactive\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sims/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sims", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Assign SIM",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"staff_id\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/sims/:id/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sims", ":id", "assign"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Unassign SIM",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/sims/:id/unassign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sims", ":id", "unassign"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete SIM",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/sims/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "sims", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incidents",
+      "item": [
+        {
+          "name": "List Incidents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/incidents", "host": ["{{base_url}}"], "path": ["api", "v1", "incidents"] }
+          }
+        },
+        {
+          "name": "Create Incident",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Production Server Down\",\n  \"description\": \"API gateway not responding since 08:00\",\n  \"priority\": \"critical\",\n  \"status\": \"open\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/incidents", "host": ["{{base_url}}"], "path": ["api", "v1", "incidents"] }
+          }
+        },
+        {
+          "name": "Get Incident",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/incidents/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "incidents", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Incident",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description after investigation\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/incidents/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "incidents", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Change Incident Status",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"investigating\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/incidents/:id/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "incidents", ":id", "status"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Assign Incident",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignee_id\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/incidents/:id/assign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "incidents", ":id", "assign"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Notify Incident",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/incidents/:id/notify",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "incidents", ":id", "notify"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "List Tickets",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/tickets", "host": ["{{base_url}}"], "path": ["api", "v1", "tickets"] }
+          }
+        },
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Cannot access dashboard\",\n  \"description\": \"Getting 403 error on dashboard page\",\n  \"priority\": \"medium\",\n  \"status\": \"open\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/tickets", "host": ["{{base_url}}"], "path": ["api", "v1", "tickets"] }
+          }
+        },
+        {
+          "name": "Get Ticket",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/tickets/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tickets", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Ticket",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/tickets/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tickets", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Trash Ticket",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/tickets/:id/trash",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tickets", ":id", "trash"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Restore Ticket",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/tickets/:id/restore",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tickets", ":id", "restore"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Taxonomy",
+      "item": [
+        {
+          "name": "List Taxonomy",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/taxonomy", "host": ["{{base_url}}"], "path": ["api", "v1", "taxonomy"] }
+          }
+        },
+        {
+          "name": "Create Taxonomy Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Q1 2026 Compliance Review\",\n  \"due_date\": \"2026-03-31T00:00:00Z\",\n  \"status\": \"pending\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/taxonomy", "host": ["{{base_url}}"], "path": ["api", "v1", "taxonomy"] }
+          }
+        },
+        {
+          "name": "Get Taxonomy Item",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxonomy/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "taxonomy", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Taxonomy Item",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Q1 2026 Compliance Review (Updated)\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxonomy/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "taxonomy", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Toggle Complete",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxonomy/:id/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "taxonomy", ":id", "complete"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Taxonomy Item",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/taxonomy/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "taxonomy", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Risk & Compliance",
+      "item": [
+        {
+          "name": "List Items",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/risk-compliance", "host": ["{{base_url}}"], "path": ["api", "v1", "risk-compliance"] }
+          }
+        },
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Data Privacy Risk\",\n  \"description\": \"Customer PII stored without encryption\",\n  \"likelihood\": \"high\",\n  \"impact\": \"critical\",\n  \"mitigation\": \"Implement AES-256 encryption for all PII fields\",\n  \"status\": \"open\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/risk-compliance", "host": ["{{base_url}}"], "path": ["api", "v1", "risk-compliance"] }
+          }
+        },
+        {
+          "name": "Export CSV",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/risk-compliance/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "risk-compliance", "export-csv"] }
+          }
+        },
+        {
+          "name": "Get Item",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/risk-compliance/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-compliance", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Item",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"mitigated\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/risk-compliance/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-compliance", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Item",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/risk-compliance/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "risk-compliance", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System Updates",
+      "item": [
+        {
+          "name": "List System Updates",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/system-updates", "host": ["{{base_url}}"], "path": ["api", "v1", "system-updates"] }
+          }
+        },
+        {
+          "name": "Create System Update",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"version\": \"1.2.0\",\n  \"changelog\": \"Added merchant statement export. Fixed SIM card assignment bug.\",\n  \"released_at\": \"2026-05-31T00:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/system-updates", "host": ["{{base_url}}"], "path": ["api", "v1", "system-updates"] }
+          }
+        },
+        {
+          "name": "Export System Updates CSV",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/system-updates/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "system-updates", "export-csv"] }
+          }
+        },
+        {
+          "name": "Get System Update",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/system-updates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "system-updates", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update System Update",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"changelog\": \"Updated changelog with hotfix notes\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/system-updates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "system-updates", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete System Update",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/system-updates/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "system-updates", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Backups",
+      "item": [
+        {
+          "name": "List Backups",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/backups", "host": ["{{base_url}}"], "path": ["api", "v1", "backups"] }
+          }
+        },
+        {
+          "name": "Create Backup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"file_path\": \"/backups/2026-05-31-full.sql\",\n  \"success\": true,\n  \"completed_at\": \"2026-05-31T02:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/v1/backups", "host": ["{{base_url}}"], "path": ["api", "v1", "backups"] }
+          }
+        },
+        {
+          "name": "Export Backups CSV",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/backups/export-csv", "host": ["{{base_url}}"], "path": ["api", "v1", "backups", "export-csv"] }
+          }
+        },
+        {
+          "name": "Get Backup",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/backups/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backups", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Update Backup",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"success\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/backups/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backups", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Download Backup",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/backups/:id/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backups", ":id", "download"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Backup",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/backups/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "backups", ":id"],
+              "variable": [{ "key": "id", "value": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recycle Bin",
+      "item": [
+        {
+          "name": "List Deleted Items",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/v1/recycle-bin", "host": ["{{base_url}}"], "path": ["api", "v1", "recycle-bin"] }
+          }
+        },
+        {
+          "name": "Restore Item",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/recycle-bin/:table/:id/restore",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "recycle-bin", ":table", ":id", "restore"],
+              "variable": [
+                { "key": "table", "value": "merchants", "description": "e.g. merchants, incidents, support_tickets, backups, inventory, sim_cards, staff_listings, departments, taxonomy_items, system_updates, risk_and_compliance, product_catalogs" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Force Delete Item",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/recycle-bin/:table/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "recycle-bin", ":table", ":id"],
+              "variable": [
+                { "key": "table", "value": "merchants" },
+                { "key": "id", "value": "" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ControlHub",
+      "item": [
+        {
+          "name": "ControlHub Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const r = pm.response.json();",
+                  "if (r.status === 0 && r.data && r.data.access_token) {",
+                  "    pm.collectionVariables.set('token', r.data.access_token);",
+                  "    console.log('ControlHub token saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@mygeepay.com\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/controlhub/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["controlhub", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "ControlHub Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/controlhub/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["controlhub", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "ControlHub Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/controlhub/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["controlhub", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

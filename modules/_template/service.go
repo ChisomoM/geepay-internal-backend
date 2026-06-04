@@ -7,7 +7,7 @@ import (
 )
 
 // Service defines the business logic for this module.
-// All methods receive *gorm.DB as the first parameter (tenant-scoped by middleware).
+// All methods receive *gorm.DB as the first parameter (company-scoped by middleware).
 type Service interface {
 	Create(db *gorm.DB, req CreateRequest) (*ResponseDTO, error)
 	Get(db *gorm.DB, id string) (*ResponseDTO, error)
@@ -32,7 +32,7 @@ func NewService(app *global.App) Service {
 // Create implements Service.Create
 func (s *service) Create(db *gorm.DB, req CreateRequest) (*ResponseDTO, error) {
 	// Business logic here
-	// The db parameter is already tenant-scoped by TenantMiddleware
+	// The db parameter is already company-scoped by CompanyMiddleware
 	s.app.Logger.Infof("Creating entity: %v", req)
 	return &ResponseDTO{}, nil
 }

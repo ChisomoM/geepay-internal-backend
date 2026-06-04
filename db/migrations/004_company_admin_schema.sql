@@ -1,5 +1,5 @@
 -- CompanyAdmin migration for platform-level administrators
--- This table is in the meta database, not tenant-scoped
+-- This table is in the meta database, not company-scoped
 
 CREATE TABLE IF NOT EXISTS company_admins (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

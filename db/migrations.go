@@ -7,34 +7,107 @@ import (
 	"gorm.io/gorm"
 )
 
-// RunMigrations executes all migration files from the migrations/ directory.
-// This should be called once at startup with the migration DB connection.
-func RunMigrations(db *gorm.DB, logger *zap.SugaredLogger) error {
-	logger.Info("Starting database migrations...")
+// RunMigrations executes all .sql files in db/migrations/ in lexical order.
+// Each file is executed as a single SQL batch using the provided GORM DB.
+// func RunMigrations(db *gorm.DB, logger *zap.SugaredLogger) error {
+// 	logger.Info("Starting database migrations from db/migrations/")
 
-	// Migration files should be in db/migrations/ and named with timestamps.
-	// This is a placeholder that would typically use SQL file execution.
-	// In a real implementation, you'd read SQL files and execute them.
+// 	dir := "db/migrations"
+// 	entries, err := os.ReadDir(dir)
+// 	if err != nil {
+// 		logger.Errorf("Failed to read migrations directory: %v", err)
+// 		return err
+// 	}
 
-	logger.Info("Migrations completed successfully")
-	return nil
-}
+// 	var files []string
+// 	for _, e := range entries {
+// 		if e.IsDir() {
+// 			continue
+// 		}
+// 		name := e.Name()
+// 		if strings.HasSuffix(name, ".sql") {
+// 			files = append(files, filepath.Join(dir, name))
+// 		}
+// 	}
 
-// AutoMigrate creates all database tables from models.
-// This is a GORM-based alternative to file-based migrations.
-// Use this for development/small projects, or use file-based migrations for prod.
+// 	sort.Strings(files)
+
+// 	for _, f := range files {
+// 		logger.Infof("Applying migration: %s", f)
+// 		b, err := os.ReadFile(f)
+// 		if err != nil {
+// 			logger.Errorf("Failed to read migration file %s: %v", f, err)
+// 			return err
+// 		}
+// 		sql := string(b)
+// 		if strings.TrimSpace(sql) == "" {
+// 			continue
+// 		}
+// 		if err := db.Exec(sql).Error; err != nil {
+// 			logger.Errorf("Failed to execute migration %s: %v", f, err)
+// 			return err
+// 		}
+// 	}
+
+// 	logger.Info("Migrations completed successfully")
+// 	return nil
+// }
+
+// AutoMigrate creates all database tables from models using GORM's AutoMigrate.
+// This is useful during development; production deployments should prefer file-based migrations.
 func AutoMigrate(db *gorm.DB, logger *zap.SugaredLogger) error {
 	logger.Info("Running AutoMigrate...")
 
-	// Core models: tenants, company admins, users, roles, permissions, audit
+	// Core models + domain models: companys, users, rbac, audit + domains
 	if err := db.AutoMigrate(
-		&models.Tenant{},
-		&models.CompanyAdmin{},
+		&models.Company{},
 		&models.User{},
 		&models.Role{},
 		&models.Permission{},
 		&models.UserPermissionOverride{},
 		&models.AuditLog{},
+
+		// Finance
+		&models.BudgetAndLicense{},
+		&models.License{},
+		&models.Statutory{},
+		&models.SalaryAdvance{},
+
+		// Inventory
+		&models.InventoryCategory{},
+		&models.Inventory{},
+
+		// Merchants
+		&models.Merchant{},
+		&models.MerchantStatement{},
+
+		// Incidents & Support
+		&models.Incident{},
+		&models.SupportTicket{},
+
+		// Products & Backups
+		&models.ProductCatalog{},
+		&models.Backup{},
+		&models.SimCard{},
+
+		// Staff + Profile
+		&models.Department{},
+		&models.StaffListing{},
+		&models.Profile{},
+
+		// Notifications & Taxonomy
+		&models.Alert{},
+		&models.AlertEmail{},
+		&models.TaxonomyItem{},
+		&models.TaxonomyNotification{},
+		&models.UserNotificationPreference{},
+
+		// Reporting + misc
+		&models.Report{},
+		&models.Setting{},
+		&models.RecycleBin{},
+		&models.RiskAndCompliance{},
+		&models.SystemUpdate{},
 	); err != nil {
 		logger.Errorf("AutoMigrate failed: %v", err)
 		return err
@@ -45,45 +118,45 @@ func AutoMigrate(db *gorm.DB, logger *zap.SugaredLogger) error {
 }
 
 // SeedDefaultRoles creates system roles and permissions if they don't exist.
-func SeedDefaultRoles(db *gorm.DB, tenantID string, logger *zap.SugaredLogger) error {
-	logger.Infof("Seeding default roles for tenant: %s", tenantID)
+func SeedDefaultRoles(db *gorm.DB, companyID string, logger *zap.SugaredLogger) error {
+	logger.Infof("Seeding default roles for company: %s", companyID)
 
 	// Default permissions
 	permissions := []models.Permission{
 		{
 			Code:        "users.view",
-			TenantID:    tenantID,
+			CompanyID:   companyID,
 			Description: "View users",
 			Category:    "users",
 		},
 		{
 			Code:        "users.create",
-			TenantID:    tenantID,
+			CompanyID:   companyID,
 			Description: "Create users",
 			Category:    "users",
 		},
 		{
 			Code:        "users.update",
-			TenantID:    tenantID,
+			CompanyID:   companyID,
 			Description: "Update users",
 			Category:    "users",
 		},
 		{
 			Code:        "users.delete",
-			TenantID:    tenantID,
+			CompanyID:   companyID,
 			Description: "Delete users",
 			Category:    "users",
 		},
 		{
 			Code:        "admin.manage",
-			TenantID:    tenantID,
+			CompanyID:   companyID,
 			Description: "Admin access",
 			Category:    "admin",
 		},
 	}
 
 	for _, perm := range permissions {
-		if err := db.FirstOrCreate(&perm, models.Permission{Code: perm.Code, TenantID: tenantID}).Error; err != nil {
+		if err := db.FirstOrCreate(&perm, models.Permission{Code: perm.Code, CompanyID: companyID}).Error; err != nil {
 			logger.Errorf("Failed to seed permission %s: %v", perm.Code, err)
 			return err
 		}

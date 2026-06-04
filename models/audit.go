@@ -7,7 +7,7 @@ import (
 // AuditLog represents a log of user activity for compliance and debugging.
 // All state-changing operations should be logged here via AuditMiddleware.
 type AuditLog struct {
-	TenantBaseModel
+	CompanyBaseModel
 	UserID     uuid.UUID `json:"user_id" gorm:"type:uuid;index"`
 	User       *User     `json:"user,omitempty" gorm:"foreignKey:UserID"`
 	Action     string    `json:"action" gorm:"index"`      // e.g., "LOGIN", "UPDATE_PROFILE", "EXPORT"

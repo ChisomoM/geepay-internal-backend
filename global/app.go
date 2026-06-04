@@ -10,8 +10,8 @@ import (
 // This is the single place where top-level infrastructure services (email, upload, config, logger)
 // are initialized and stored. It is passed to module factories at startup.
 //
-// CRITICAL RULE: App NEVER contains *gorm.DB (or any tenant-scoped resource).
-// Database access is always per-request, scoped by TenantMiddleware, and passed through
+// CRITICAL RULE: App NEVER contains *gorm.DB (or any company-scoped resource).
+// Database access is always per-request, scoped by CompanyMiddleware, and passed through
 // handler → service as a method parameter.
 //
 // For adding new infrastructure services (e.g., cache, queue, auth provider):
@@ -22,7 +22,7 @@ type App struct {
 	Config *config.Config
 	Logger *zap.SugaredLogger
 
-	// Infrastructure services (tenant-agnostic)
+	// Infrastructure services (company-agnostic)
 	// Use interfaces to allow swapping implementations per project
 	Email  EmailSender
 	Upload FileUploader

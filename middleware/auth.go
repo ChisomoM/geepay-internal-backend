@@ -12,7 +12,7 @@ import (
 )
 
 // JWTMiddleware validates the JWT token and extracts claims into the Echo context.
-// This middleware should run before TenantMiddleware.
+// This middleware should run before CompanyMiddleware.
 func JWTMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -62,7 +62,7 @@ func JWTMiddleware(cfg *config.Config) echo.MiddlewareFunc {
 			c.Set("user_id", claims["sub"])
 			c.Set("email", claims["email"])
 			c.Set("role_slug", claims["role_slug"])
-			c.Set("tenant_id", claims["tenant_id"])
+			c.Set("company_id", claims["company_id"])
 			c.Set("role", claims["role"])           // ControlHub: platform-level role
 			c.Set("level", claims["level"])         // ControlHub: access level
 			c.Set("user_type", claims["user_type"]) // User type (e.g., controlhub_admin)

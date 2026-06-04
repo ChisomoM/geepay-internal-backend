@@ -32,7 +32,7 @@ func NewHandler(service Service) Handler {
 
 // Create handles POST /entities
 func (h *handler) Create(c echo.Context) error {
-	// Extract tenant-scoped DB from context (set by TenantMiddleware)
+	// Extract company-scoped DB from context (set by CompanyMiddleware)
 	db := c.Get("db").(*gorm.DB)
 
 	var req CreateRequest
