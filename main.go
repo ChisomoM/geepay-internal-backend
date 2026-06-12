@@ -15,10 +15,10 @@ import (
 
 	"backend/modules/auth"
 	"backend/modules/backups"
+	"backend/modules/crm"
 	"backend/modules/dashboard"
 	"backend/modules/departments"
 	"backend/modules/finance"
-	"backend/modules/incidents"
 	"backend/modules/inventory"
 	"backend/modules/merchantportal"
 	"backend/modules/merchants"
@@ -117,8 +117,8 @@ func main() {
 	productsService := products.NewService(app)
 	productsHandler := products.NewHandler(productsService)
 
-	incidentsService := incidents.NewService(app)
-	incidentsHandler := incidents.NewHandler(incidentsService)
+	crmService := crm.NewService(app)
+	crmHandler := crm.NewHandler(crmService)
 
 	simsService := sims.NewService(app)
 	simsHandler := sims.NewHandler(simsService)
@@ -156,7 +156,7 @@ func main() {
 	dashboardService := dashboard.NewService(app)
 	dashboardHandler := dashboard.NewHandler(dashboardService)
 
-	merchantPortalService := merchantportal.NewService(app)
+	merchantPortalService := merchantportal.NewService(app, crmService)
 	merchantPortalHandler := merchantportal.NewHandler(merchantPortalService)
 
 	// Create Echo router
@@ -210,7 +210,7 @@ func main() {
 	routes.SetupInventoryRoutes(api, inventoryHandler)
 	routes.SetupProductRoutes(api, productsHandler)
 	routes.SetupSimRoutes(api, simsHandler)
-	routes.SetupIncidentsRoutes(api, incidentsHandler)
+	routes.SetupCRMRoutes(api, crmHandler)
 	routes.SetupDepartmentRoutes(api, departmentsHandler)
 	routes.SetupStaffRoutes(api, staffHandler)
 	routes.SetupSystemUpdateRoutes(api, systemUpdatesHandler)
@@ -227,6 +227,15 @@ func main() {
 	go func() {
 		if err := e.Start(":" + cfg.Port); err != nil && err.Error() != "http: Server closed" {
 			sugar.Errorf("Server error: %v", err)
+		}
+	}()
+
+	// SLA breach sweep: runs every 15 minutes, emails assigned agents for overdue tickets
+	go func() {
+		ticker := time.NewTicker(15 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			crmService.SweepBreachedTickets(db.GetDB())
 		}
 	}()
 

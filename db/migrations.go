@@ -81,9 +81,12 @@ func AutoMigrate(db *gorm.DB, logger *zap.SugaredLogger) error {
 		&models.Merchant{},
 		&models.MerchantStatement{},
 
-		// Incidents & Support
-		&models.Incident{},
-		&models.SupportTicket{},
+		// CRM — unified ticketing
+		&models.Ticket{},
+		&models.TicketEvent{},
+		&models.TicketCategory{},
+		&models.CRMRoutingRule{},
+		&models.SLAPolicy{},
 
 		// Products & Backups
 		&models.ProductCatalog{},
@@ -123,36 +126,20 @@ func SeedDefaultRoles(db *gorm.DB, companyID string, logger *zap.SugaredLogger) 
 
 	// Default permissions
 	permissions := []models.Permission{
-		{
-			Code:        "users.view",
-			CompanyID:   companyID,
-			Description: "View users",
-			Category:    "users",
-		},
-		{
-			Code:        "users.create",
-			CompanyID:   companyID,
-			Description: "Create users",
-			Category:    "users",
-		},
-		{
-			Code:        "users.update",
-			CompanyID:   companyID,
-			Description: "Update users",
-			Category:    "users",
-		},
-		{
-			Code:        "users.delete",
-			CompanyID:   companyID,
-			Description: "Delete users",
-			Category:    "users",
-		},
-		{
-			Code:        "admin.manage",
-			CompanyID:   companyID,
-			Description: "Admin access",
-			Category:    "admin",
-		},
+		{Code: "users.view", CompanyID: companyID, Description: "View users", Category: "users"},
+		{Code: "users.create", CompanyID: companyID, Description: "Create users", Category: "users"},
+		{Code: "users.update", CompanyID: companyID, Description: "Update users", Category: "users"},
+		{Code: "users.delete", CompanyID: companyID, Description: "Delete users", Category: "users"},
+		{Code: "admin.manage", CompanyID: companyID, Description: "Admin access", Category: "admin"},
+
+		// CRM permissions
+		{Code: "crm.tickets.view", CompanyID: companyID, Description: "View tickets", Category: "crm"},
+		{Code: "crm.tickets.create", CompanyID: companyID, Description: "Create tickets", Category: "crm"},
+		{Code: "crm.tickets.assign", CompanyID: companyID, Description: "Assign tickets", Category: "crm"},
+		{Code: "crm.tickets.resolve", CompanyID: companyID, Description: "Resolve tickets", Category: "crm"},
+		{Code: "crm.tickets.escalate", CompanyID: companyID, Description: "Escalate tickets", Category: "crm"},
+		{Code: "crm.config.manage", CompanyID: companyID, Description: "Manage routing rules, SLA policies, categories", Category: "crm"},
+		{Code: "crm.reports.view", CompanyID: companyID, Description: "View CRM reports", Category: "crm"},
 	}
 
 	for _, perm := range permissions {

@@ -27,8 +27,7 @@ func NewService(app *global.App) Service {
 var tableModelMap = map[string]func() interface{}{
 	"merchants":           func() interface{} { return &models.Merchant{} },
 	"merchant_statements": func() interface{} { return &models.MerchantStatement{} },
-	"incidents":           func() interface{} { return &models.Incident{} },
-	"support_tickets":     func() interface{} { return &models.SupportTicket{} },
+	"tickets":             func() interface{} { return &models.Ticket{} },
 	"risk_and_compliance": func() interface{} { return &models.RiskAndCompliance{} },
 	"backups":             func() interface{} { return &models.Backup{} },
 	"inventory":           func() interface{} { return &models.Inventory{} },

@@ -1,8 +1,9 @@
 package merchantportal
 
 import (
-	"backend/pkg/response"
 	"net/http"
+
+	"backend/pkg/response"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ type Handler interface {
 	GetTicket(c echo.Context) error
 	CreateTicket(c echo.Context) error
 	UpdateTicketStatus(c echo.Context) error
+	AddComment(c echo.Context) error
 }
 
 type handler struct {
@@ -53,12 +55,11 @@ func (h *handler) ListTickets(c echo.Context) error {
 
 // GetTicket handles GET /merchant/v1/tickets/:id
 func (h *handler) GetTicket(c echo.Context) error {
-	id := c.Param("id")
 	db := c.Get("db").(*gorm.DB)
 	merchantID, _ := c.Get("merchant_id").(string)
-	ticket, err := h.svc.GetTicket(db, merchantID, id)
+	ticket, err := h.svc.GetTicket(db, merchantID, c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusNotFound, response.Error("not found"))
+		return c.JSON(http.StatusNotFound, response.Error("ticket not found"))
 	}
 	return c.JSON(http.StatusOK, response.Success(ticket))
 }
@@ -80,7 +81,6 @@ func (h *handler) CreateTicket(c echo.Context) error {
 
 // UpdateTicketStatus handles PATCH /merchant/v1/tickets/:id/status
 func (h *handler) UpdateTicketStatus(c echo.Context) error {
-	id := c.Param("id")
 	var req UpdateTicketStatusRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, response.Error("invalid request"))
@@ -90,9 +90,27 @@ func (h *handler) UpdateTicketStatus(c echo.Context) error {
 	}
 	db := c.Get("db").(*gorm.DB)
 	merchantID, _ := c.Get("merchant_id").(string)
-	ticket, err := h.svc.UpdateTicketStatus(db, merchantID, id, req.Status)
+	ticket, err := h.svc.UpdateTicketStatus(db, merchantID, c.Param("id"), req.Status)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, response.Error(err.Error()))
 	}
 	return c.JSON(http.StatusOK, response.SuccessWithMessage("status updated", ticket))
+}
+
+// AddComment handles POST /merchant/v1/tickets/:id/comments
+func (h *handler) AddComment(c echo.Context) error {
+	var req AddCommentRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, response.Error("invalid request"))
+	}
+	db := c.Get("db").(*gorm.DB)
+	merchantID, _ := c.Get("merchant_id").(string)
+	event, err := h.svc.AddComment(db, merchantID, c.Param("id"), req.Body)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, response.Error("ticket not found"))
+		}
+		return c.JSON(http.StatusBadRequest, response.Error(err.Error()))
+	}
+	return c.JSON(http.StatusCreated, response.SuccessWithMessage("comment added", event))
 }

@@ -21,8 +21,7 @@ Get from zero to a running API server in minutes.
 ## Prerequisites
 
 - **Go** 1.25 or later — `go version` to check
-- **Docker** with Docker Compose — `docker --version` to check
-- **Make** — available by default on macOS/Linux; on Windows install via Git Bash, WSL, or Chocolatey
+- **PostgreSQL** or **MySQL** running locally — database must be accessible before starting the server
 - **Git**
 
 ---
@@ -31,10 +30,11 @@ Get from zero to a running API server in minutes.
 
 ```bash
 cd geepay-internal-backend
-make setup
+go mod download
+go mod tidy
 ```
 
-This runs `go mod download && go mod tidy` to fetch all dependencies.
+This fetches all Go dependencies.
 
 ---
 
@@ -44,7 +44,7 @@ This runs `go mod download && go mod tidy` to fetch all dependencies.
 cp .env.example .env
 ```
 
-Minimum changes needed for local development:
+Edit `.env` with your database connection details and other settings:
 
 ```env
 APP_PORT=8080
@@ -54,12 +54,21 @@ APP_ENV=development
 MULTI_COMPANY_ENABLED=true
 DEFAULT_COMPANY_ID=default
 
-# Database — matches docker-compose defaults, no changes needed
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=template_db
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
+# Database — configure for your local setup (PostgreSQL or MySQL)
+# PostgreSQL example:
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_NAME=geepay_db
+# DB_USERNAME=postgres
+# DB_PASSWORD=your_password
+
+# MySQL example:
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_NAME=geepay_db
+# DB_USERNAME=root
+# DB_PASSWORD=your_password
+
 DB_POOL_MAX_OPEN=25
 DB_POOL_MAX_IDLE=5
 
@@ -80,26 +89,33 @@ Email (`SMTP_*`) and file storage (`MINIO_*` or `FILE_STORAGE_TYPE`) are optiona
 
 ## Running Locally
 
+### 1. Start your database
+
+Make sure PostgreSQL or MySQL is running and accessible with the credentials in your `.env` file.
+
+**PostgreSQL** (if installed locally):
 ```bash
-make run
+psql -U postgres -d geepay_db
 ```
 
-This single command:
-1. Starts PostgreSQL via Docker Compose (`make db-up`)
-2. Runs the Go server (`go run main.go`)
-3. Auto-runs all migrations on first boot (creates tables)
-4. Seeds default data (company record + super admin user)
+**MySQL** (if using MySQL):
+```bash
+mysql -u root -p
+```
+
+### 2. Start the Go server
+
+```bash
+go run main.go
+```
+
+On first run, the server will:
+1. Auto-run all migrations (creates/updates tables)
+2. Seed default data (company record + super admin user)
 
 > **First run:** migrations and seeding take ~10 seconds. Subsequent starts are under 2 seconds.
 
 The API is available at **http://localhost:8080**.
-
-To run the database and server separately:
-
-```bash
-make db-up    # just PostgreSQL
-go run main.go
-```
 
 ---
 
@@ -135,44 +151,26 @@ curl http://localhost:8080/api/v1/users \
 ## Running Tests
 
 ```bash
-make test
+go test -v ./...
 ```
 
-This runs `go test -v ./...` across all packages.
+This runs tests across all packages.
 
 ---
 
 ## Adding a New Module
 
-Use the scaffold command first, then fill in the generated files.
-
 ### Step 1 — Scaffold
 
+Copy `modules/_template/` to `modules/contracts/` (or your module name):
+
 ```bash
-make new-module NAME=contracts
+cp -r modules/_template modules/contracts
 ```
 
-This copies `modules/_template/` into `modules/contracts/` with all `MODULENAME` placeholders replaced.
+Then manually replace all occurrences of `MODULENAME` in the files with your module name (e.g., `contracts`).
 
-### Step 2 — Add a database migration
-
-Create `db/migrations/012_contracts_schema.sql`:
-
-```sql
-CREATE TABLE IF NOT EXISTS contracts (
-    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    company_id  VARCHAR      NOT NULL,
-    name        VARCHAR      NOT NULL,
-    status      VARCHAR      NOT NULL DEFAULT 'draft',
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    deleted_at  TIMESTAMPTZ
-);
-
-CREATE INDEX IF NOT EXISTS idx_contracts_company_id ON contracts(company_id);
-```
-
-### Step 3 — Add the GORM model
+### Step 2 — Add the GORM model
 
 Create `models/contract.go` (or add to a relevant existing model file):
 
@@ -186,7 +184,7 @@ type Contract struct {
 }
 ```
 
-### Step 4 — Define DTOs in `modules/contracts/models.go`
+### Step 3 — Define DTOs in `modules/contracts/models.go`
 
 ```go
 package contracts
@@ -211,7 +209,7 @@ type ContractResponse struct {
 }
 ```
 
-### Step 5 — Implement the service in `modules/contracts/service.go`
+### Step 4 — Implement the service in `modules/contracts/service.go`
 
 ```go
 package contracts
@@ -276,7 +274,7 @@ func (s *service) Delete(db *gorm.DB, id string) error {
 }
 ```
 
-### Step 6 — Implement the handler in `modules/contracts/handler.go`
+### Step 5 — Implement the handler in `modules/contracts/handler.go`
 
 ```go
 package contracts
@@ -352,7 +350,7 @@ func (h *Handler) Delete(c echo.Context) error {
 }
 ```
 
-### Step 7 — Register routes in `routes/routes.go`
+### Step 6 — Register routes in `routes/routes.go`
 
 ```go
 func SetupContractRoutes(g *echo.Group, h *contracts.Handler, db *gorm.DB, logger *zap.SugaredLogger) {
@@ -367,7 +365,7 @@ func SetupContractRoutes(g *echo.Group, h *contracts.Handler, db *gorm.DB, logge
 }
 ```
 
-### Step 8 — Wire into `main.go`
+### Step 7 — Wire into `main.go`
 
 ```go
 // Initialize service and handler
@@ -378,11 +376,11 @@ contractHandler := contracts.NewHandler(contractSvc)
 routes.SetupContractRoutes(api, contractHandler, db, logger)
 ```
 
-### Step 9 — Add AutoMigrate entry
+### Step 8 — Add AutoMigrate entry
 
-In `main.go`, find the `db.AutoMigrate(...)` call and add `&models.Contract{}` to the list.
+In `main.go`, find the `db.AutoMigrate(...)` call and add `&models.Contract{}` to the list. This automatically creates/updates the table schema on startup.
 
-### Step 10 — Add permissions to seeds (optional)
+### Step 9 — Add permissions to seeds (optional)
 
 In `db/seeds.go`, add permission entries:
 
@@ -464,31 +462,15 @@ db.Session(&gorm.Session{NewDB: false}).
 
 Without `NewDB: false`, Preload creates a fresh DB session that loses the company scoping.
 
-### Connecting to the database directly
-
-```
-Host:     localhost
-Port:     5432
-Database: template_db
-User:     postgres
-Password: postgres
-```
-
-Use any PostgreSQL client (psql, TablePlus, DBeaver, etc.).
-
-```bash
-psql -h localhost -U postgres -d template_db
-```
-
----
-
 ## Troubleshooting
 
-**`dial tcp [::1]:5432: connect: connection refused` at startup**
-- PostgreSQL isn't running. Run `make db-up` first, wait a few seconds, then restart the server.
+**`dial tcp localhost:5432: connect: connection refused` or MySQL connection error at startup**
+- The database isn't running. Start PostgreSQL or MySQL and ensure it's accessible with your `.env` credentials. Then restart the server.
 
-**Migrations fail with `column already exists` or `relation already exists`**
-- Never edit an existing migration file. Add a new numbered migration with `IF NOT EXISTS` guards.
+**AutoMigrate creates or updates tables**
+- AutoMigrate uses GORM models to automatically create/update table schemas on startup.
+- If you modify a model (add/remove/change a field), the schema updates automatically on next server start.
+- Use GORM tags like `gorm:"column:name"` to control field mapping.
 
 **`401 Unauthorized` on all protected endpoints after login**
 - `JWT_SECRET` in `.env` must match the secret used when the token was signed. If you changed it, existing tokens are invalid — log in again.
@@ -503,8 +485,8 @@ psql -h localhost -U postgres -d template_db
 - `CORS_ALLOWED_ORIGINS` in `.env` must exactly match the frontend's origin, including scheme and port: `http://localhost:6050`.
 - Multiple origins are comma-separated: `http://localhost:6050,http://localhost:3000`.
 
-**`make new-module` fails on Windows**
-- The Makefile uses `sed` and `cp`. Run it inside Git Bash or WSL. Alternatively, copy `modules/_template/` manually and rename `MODULENAME` occurrences.
+**Module scaffolding on Windows**
+- Copy `modules/_template/` manually to your new module folder, then find-and-replace all `MODULENAME` occurrences with your actual module name.
 
 **Server starts but returns unexpected data across companies**
 - A service method is probably storing `*gorm.DB` on the struct or using a top-level DB reference instead of the one passed per method. Every service method must receive `db *gorm.DB` as a parameter from the handler.
@@ -518,13 +500,10 @@ psql -h localhost -U postgres -d template_db
 
 | Command | Action |
 |---|---|
-| `make setup` | Download and tidy Go dependencies |
-| `make db-up` | Start PostgreSQL container |
-| `make db-down` | Stop PostgreSQL container |
-| `make run` | Start database + server |
-| `make build` | Compile binary to `bin/server` |
-| `make test` | Run all tests with verbose output |
-| `make lint` | Run `go fmt` + `go vet` |
-| `make new-module NAME=<name>` | Scaffold a new module from template |
-| `make clean` | Remove build artifacts |
-| `make help` | List all available Makefile targets |
+| `go mod download && go mod tidy` | Download and tidy Go dependencies |
+| `go run main.go` | Start the server |
+| `go build -o bin/server` | Compile binary to `bin/server` |
+| `go test -v ./...` | Run all tests with verbose output |
+| `go fmt ./... && go vet ./...` | Format and vet code |
+| `cp -r modules/_template modules/<name>` | Copy template module (then manually replace MODULENAME) |
+| `rm -rf bin/` | Remove build artifacts |

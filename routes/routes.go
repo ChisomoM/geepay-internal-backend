@@ -4,10 +4,10 @@ import (
 	"backend/middleware"
 	"backend/modules/auth"
 	"backend/modules/backups"
+	"backend/modules/crm"
 	"backend/modules/dashboard"
 	"backend/modules/departments"
 	"backend/modules/finance"
-	"backend/modules/incidents"
 	"backend/modules/inventory"
 	"backend/modules/merchantportal"
 	"backend/modules/merchants"
@@ -59,6 +59,7 @@ func SetupMerchantPortalRoutes(e *echo.Echo, handler merchantportal.Handler, cfg
 	merchantAPI.POST("/tickets", handler.CreateTicket)
 	merchantAPI.GET("/tickets/:id", handler.GetTicket)
 	merchantAPI.PATCH("/tickets/:id/status", handler.UpdateTicketStatus)
+	merchantAPI.POST("/tickets/:id/comments", handler.AddComment)
 }
 
 // SetupUserRoutes registers user management routes (protected).
@@ -142,27 +143,46 @@ func SetupInventoryRoutes(g *echo.Group, handler inventory.Handler) {
 	inv.DELETE("/category/:id", handler.DeleteCategory)
 }
 
-// SetupIncidentsRoutes registers incidents and support ticket endpoints.
-func SetupIncidentsRoutes(g *echo.Group, handler incidents.Handler) {
-	it := g.Group("/incidents")
+// SetupCRMRoutes registers the unified CRM ticketing endpoints.
+func SetupCRMRoutes(g *echo.Group, handler crm.Handler) {
+	c := g.Group("/crm")
 
-	// Incidents
-	it.GET("", handler.ListIncidents)
-	it.POST("", handler.CreateIncident)
-	it.GET("/:id", handler.GetIncident)
-	it.PUT("/:id", handler.UpdateIncident)
-	it.POST("/:id/status", handler.ChangeIncidentStatus)
-	it.POST("/:id/assign", handler.AssignIncident)
-	it.POST("/:id/notify", handler.NotifyIncident)
+	// Tickets — /breached must be registered before /:id to avoid route conflict
+	c.GET("/tickets", handler.ListTickets)
+	c.POST("/tickets", handler.CreateTicket)
+	c.GET("/tickets/breached", handler.ListBreachedTickets)
+	c.GET("/tickets/:id", handler.GetTicket)
+	c.PUT("/tickets/:id", handler.UpdateTicket)
+	c.DELETE("/tickets/:id", handler.TrashTicket)
+	c.POST("/tickets/:id/status", handler.ChangeStatus)
+	c.POST("/tickets/:id/assign", handler.AssignTicket)
+	c.POST("/tickets/:id/escalate", handler.EscalateTicket)
+	c.GET("/tickets/:id/events", handler.ListEvents)
+	c.POST("/tickets/:id/comments", handler.AddComment)
 
-	// Support tickets under /api/v1/tickets
-	t := g.Group("/tickets")
-	t.GET("", handler.ListTickets)
-	t.POST("", handler.CreateTicket)
-	t.GET("/:id", handler.GetTicket)
-	t.PUT("/:id", handler.UpdateTicket)
-	t.POST("/:id/trash", handler.TrashTicket)
-	t.POST("/:id/restore", handler.RestoreTicket)
+	// Categories
+	c.GET("/categories", handler.ListCategories)
+	c.POST("/categories", handler.CreateCategory)
+	c.GET("/categories/:id", handler.GetCategory)
+	c.PUT("/categories/:id", handler.UpdateCategory)
+	c.DELETE("/categories/:id", handler.DeleteCategory)
+
+	// Routing rules
+	c.GET("/routing-rules", handler.ListRoutingRules)
+	c.POST("/routing-rules", handler.CreateRoutingRule)
+	c.PUT("/routing-rules/:id", handler.UpdateRoutingRule)
+	c.DELETE("/routing-rules/:id", handler.DeleteRoutingRule)
+
+	// SLA policies
+	c.GET("/sla-policies", handler.ListSLAPolicies)
+	c.POST("/sla-policies", handler.CreateSLAPolicy)
+	c.PUT("/sla-policies/:id", handler.UpdateSLAPolicy)
+	c.DELETE("/sla-policies/:id", handler.DeleteSLAPolicy)
+
+	// Reports
+	c.GET("/reports/summary", handler.GetSummaryStats)
+	c.GET("/reports/by-category", handler.GetStatsByCategory)
+	c.GET("/reports/by-agent", handler.GetStatsByAgent)
 }
 
 // SetupProductRoutes registers product catalog endpoints.

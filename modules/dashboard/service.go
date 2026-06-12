@@ -93,13 +93,13 @@ func (s *service) GetDashboardStats(db *gorm.DB, companyID string) (*DashboardSt
 	db.Model(&models.StaffListing{}).Count(&stats.Staff.Total)
 	db.Model(&models.StaffListing{}).Where("is_active = ?", true).Count(&stats.Staff.Active)
 
-	// Incidents
-	db.Model(&models.Incident{}).Count(&stats.Incidents.Total)
-	db.Model(&models.Incident{}).Where("status NOT IN (?)", []string{"resolved", "closed"}).Count(&stats.Incidents.Open)
+	// Incidents (kind = "incident")
+	db.Model(&models.Ticket{}).Where("kind = ? AND is_trashed = false", "incident").Count(&stats.Incidents.Total)
+	db.Model(&models.Ticket{}).Where("kind = ? AND is_trashed = false AND status NOT IN (?)", "incident", []string{"resolved", "closed"}).Count(&stats.Incidents.Open)
 
-	// Support Tickets (is_trashed = false = active tickets)
-	db.Model(&models.SupportTicket{}).Where("is_trashed = ?", false).Count(&stats.Tickets.Total)
-	db.Model(&models.SupportTicket{}).Where("is_trashed = ? AND status NOT IN (?)", false, []string{"closed", "resolved"}).Count(&stats.Tickets.Open)
+	// Support Tickets (kind = "support")
+	db.Model(&models.Ticket{}).Where("kind = ? AND is_trashed = false", "support").Count(&stats.Tickets.Total)
+	db.Model(&models.Ticket{}).Where("kind = ? AND is_trashed = false AND status NOT IN (?)", "support", []string{"closed", "resolved"}).Count(&stats.Tickets.Open)
 
 	// Budget items
 	db.Model(&models.BudgetAndLicense{}).Count(&stats.BudgetItems.Total)
